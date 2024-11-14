@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
@@ -16,17 +17,23 @@ android {
                 arguments = [eventBusIndex: 'ml.docilealligator.infinityforreddit.EventBusIndex']
             }
         }
+        buildConfigField "String", "INF_CLIENT_TOKEN", "\"${project.findProperty('INF_CLIENT_TOKEN')}\""
+        buildConfigField "String", "INF_APP_ID", "\"${project.findProperty('INF_APP_ID')}\""
+        buildConfigField "String", "ENV_NAME", "\"internal\""
     }
     buildTypes {
         release {
             minifyEnabled false
+            profileable true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
         }
         minifiedRelease {
             initWith buildTypes.release
             zipAlignEnabled true
             minifyEnabled true
             shrinkResources true
+            profileable true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
@@ -54,6 +61,9 @@ android {
         viewBinding = true
     }
     namespace 'ml.docilealligator.infinityforreddit'
+    kotlinOptions {
+        jvmTarget = '11'
+    }
 }
 
 dependencies {
@@ -65,6 +75,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.activity:activity:1.9.0'
+    implementation 'androidx.core:core-ktx:1.13.1'
     def lifecycleVersion = "2.7.0"
     implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycleVersion"
     implementation "androidx.lifecycle:lifecycle-livedata:$lifecycleVersion"
@@ -165,6 +176,11 @@ dependencies {
     implementation "io.noties.markwon:image-glide:$markwonVersion"
     implementation 'com.atlassian.commonmark:commonmark-ext-gfm-tables:0.14.0'
     implementation 'me.saket:better-link-movement-method:2.2.0'
+
+    def datadog = "2.15.1"
+    implementation "com.datadoghq:dd-sdk-android-rum:$datadog"
+    implementation "com.datadoghq:dd-sdk-android-session-replay:$datadog"
+    implementation "com.datadoghq:dd-sdk-android-session-replay-material:$datadog"
 
     // Animations
     implementation 'com.airbnb.android:lottie:6.4.1'

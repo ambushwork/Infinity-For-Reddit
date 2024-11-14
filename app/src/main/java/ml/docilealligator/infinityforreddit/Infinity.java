@@ -9,6 +9,7 @@ import android.graphics.Typeface;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
 
@@ -19,6 +20,18 @@ import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.OnLifecycleEvent;
 import androidx.lifecycle.ProcessLifecycleOwner;
 
+import com.datadog.android.Datadog;
+import com.datadog.android.core.configuration.BatchSize;
+import com.datadog.android.core.configuration.Configuration;
+import com.datadog.android.core.configuration.UploadFrequency;
+import com.datadog.android.privacy.TrackingConsent;
+import com.datadog.android.rum.Rum;
+import com.datadog.android.rum.RumConfiguration;
+import com.datadog.android.sessionreplay.ImagePrivacy;
+import com.datadog.android.sessionreplay.SessionReplay;
+import com.datadog.android.sessionreplay.SessionReplayConfiguration;
+import com.datadog.android.sessionreplay.TextAndInputPrivacy;
+import com.datadog.android.sessionreplay.TouchPrivacy;
 import com.evernote.android.state.StateSaver;
 import com.livefront.bridge.Bridge;
 import com.livefront.bridge.SavedStateHandler;
@@ -165,6 +178,35 @@ public class Infinity extends Application implements LifecycleObserver {
             registerReceiver(mNetworkWifiStatusReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
             registerReceiver(new WallpaperChangeReceiver(mSharedPreferences), new IntentFilter(Intent.ACTION_WALLPAPER_CHANGED));
         }
+        setupDatadog();
+    }
+
+    private void setupDatadog(){
+
+            Configuration coreConfig = new Configuration
+                    .Builder(BuildConfig.INF_CLIENT_TOKEN,
+                             BuildConfig.ENV_NAME)
+                    .setBatchSize(BatchSize.SMALL)
+                    .setUploadFrequency(UploadFrequency.FREQUENT)
+                    .build();
+
+            Datadog.setVerbosity(Log.VERBOSE);
+            Datadog.initialize(this, coreConfig, TrackingConsent.GRANTED);
+
+            RumConfiguration rumConfig =new RumConfiguration.Builder( BuildConfig.INF_APP_ID)
+                    .trackUserInteractions()
+                    .setTelemetrySampleRate(100F)
+                    .trackBackgroundEvents(true)
+                    .build();
+
+            Rum.enable(rumConfig);
+
+        SessionReplayConfiguration sessionReplayConfig = new SessionReplayConfiguration.Builder(100)
+                .setImagePrivacy(ImagePrivacy.MASK_NONE)
+                .setTouchPrivacy(TouchPrivacy.SHOW)
+                .setTextAndInputPrivacy(TextAndInputPrivacy.MASK_SENSITIVE_INPUTS)
+                .build();
+        SessionReplay.enable(sessionReplayConfig);
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
